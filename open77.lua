@@ -13,6 +13,12 @@ client_script "client/demo.lua"
 
 -- Published to dependants: `require('@opx_menu')` loads init.lua into the caller's VM.
 -- The service reads the ui and locale files and hands them to the library.
+-- Server side only for the update check (Config.versionCheck).
+server_scripts {
+    "config.lua",
+    "server/version.lua",
+}
+
 files {
     "init.lua",
     "lib/*.lua",
@@ -25,4 +31,5 @@ permissions {
     "world.effects",   -- Open77.sfx.play2d (menu sounds)
     "session.locale",  -- Open77.session.locale (Config.locale = 'auto')
     "input.actions",   -- RegisterKeyMapping / Open77.input.isDown / keyFor (menu navigation keys)
+    "http.request", -- server: Open77.http.get (update check, Config.versionCheck)
 }

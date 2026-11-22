@@ -83,3 +83,8 @@ Config.tilt = {
     spring = { duration = 0.5, bounce = 0.12 }, -- the tilt-in on open
     exitMs = 160,              -- untilt + fade on close (0: hide at once)
 }
+
+-- Update check at start: compares this version with the one published on GitHub and prints a line in the
+-- server console when an update is out. Needs outbound HTTP in server.jsonc ("http": "enabled": true, with
+-- "raw.githubusercontent.com" in "allowedHosts"). false = no request.
+Config.versionCheck = true
