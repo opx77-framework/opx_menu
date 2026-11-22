@@ -1,0 +1,145 @@
+---@meta
+
+---@alias OpxMenuElementType 'button' | 'list' | 'slider' | 'color' | 'checkbox' | 'separator'
+---@alias OpxMenuStyle 'clean' | 'flat' | 'holo' Kept for compatibility: all draw the same selection wheel.
+-- back = Backspace, closed = menu:close(), closeAll = Menu.closeAll(), replaced = this resource opened a new root
+-- menu, preempted = another resource took the screen or the service CloseAll ran, paused = Escape, stopped = opx_menu stopped.
+---@alias OpxMenuCloseReason 'back' | 'closed' | 'closeAll' | 'replaced' | 'preempted' | 'paused' | 'stopped'
+---@alias OpxMenuOpenReason 'invalid_options' | 'invalid_elements' | 'nativeui_unavailable' | 'opx_menu_unavailable' | 'ui_files_unreadable' | 'ui_create_failed' | 'menu_busy' | 'dialog_busy' | 'no_caller' | string
+---@alias OpxDialogReason 'cancelled' | 'closed' | 'focus_lost' | 'dialog_busy' | 'not_in_thread' | 'dialog_unavailable' | 'dialog_failed' | 'invalid_field' | OpxMenuOpenReason
+---@alias OpxMenuIcon 'dot'|'hand'|'person'|'group'|'vehicle'|'door'|'lock'|'unlock'|'key'|'info'|'search'|'eye'|'chat'|'mail'|'phone'|'box'|'bag'|'heart'|'medical'|'money'|'card'|'gear'|'tool'|'chip'|'gun'|'bolt'|'shield'|'location'|'map'|'home'|'flag'|'clock'|'camera'|'music'|'star'|'list'|'copy'|'edit'|'trash'|'warning'|'plus'|'minus'|'check'|'close'|'arrow'|'back'|'refresh'|'power'|'exit'|'user'|'users'|'car'|'settings'|'wrench'|'pin'|'cash'|string Aliases: Menu.icons() lists every name.
+
+---@class OpxColor
+---@field r number 0-255
+---@field g number 0-255
+---@field b number 0-255
+---@field a? number 0-255, ignored by the swatch
+
+---@class OpxMenuElement
+---@field type? OpxMenuElementType Default 'button'.
+---@field label? string
+---@field value? any Key used by updateElement / getElement; free for the caller.
+---@field icon? OpxMenuIcon Small line icon before the label (unknown names draw nothing; Config.debug logs them).
+---@field description? string Text under the row while the element is selected: two lines at most, cut with "…".
+---@field rightLabel? string Text on the right (price, state...).
+---@field disabled? boolean Drawn dimmed; no onSelect / onChange.
+---@field options? (string|number|{label: string, value: any})[] list: the choices.
+---@field colors? (OpxColor|string)[] color: the swatches ({r,g,b} or '#rrggbb').
+---@field index? integer list / color: current position, 1-based. Kept up to date by the library.
+---@field min? number slider, default 0.
+---@field max? number slider, default 100.
+---@field step? number slider, default 1.
+---@field current? number slider: current value. Kept up to date by the library.
+---@field format? string slider: string.format pattern for the value, e.g. '%.2f' or '%d%%'.
+---@field checked? boolean checkbox. Kept up to date by the library.
+
+---@class OpxMenuOptions
+---@field id? string
+---@field title? string
+---@field subtitle? string Shown upper-cased in the footer line ("· TITLE · SUBTITLE · 3/6 ·").
+---@field position? 'left' | 'right' Default Config.position.
+---@field style? OpxMenuStyle Accepted for compatibility; ignored.
+---@field elements OpxMenuElement[]
+---@field selected? integer|any Index or element value selected on open.
+---@field maxVisible? integer Rows drawn at once on the wheel; can only lower Config.wheel.rows per side (5 = 2 above, 2 below).
+---@field canClose? boolean false: Backspace/Escape do nothing and other resources cannot take the screen.
+---@field parent? OpxMenu Backspace returns to it.
+---@field onSelect? fun(element: OpxMenuElement, menu: OpxMenu) Enter (not checkboxes).
+---@field onChange? fun(element: OpxMenuElement, value: any, menu: OpxMenu) list/color: index, slider: current, checkbox: checked.
+---@field onHover? fun(element: OpxMenuElement, menu: OpxMenu) Selection moved (also on open and when returning from a child).
+---@field onClose? fun(menu: OpxMenu, reason: OpxMenuCloseReason)
+
+---@class OpxMenu
+---@field id? string
+---@field title string
+---@field subtitle string
+---@field elements OpxMenuElement[]
+---@field selected integer
+---@field parent? OpxMenu
+---@field setElements fun(self: OpxMenu, elements: OpxMenuElement[], keepSelection?: boolean): boolean, string|nil false, 'invalid_elements' when an entry is not a table
+---@field updateElement fun(self: OpxMenu, value: any, patch: table): boolean False when no element has that value.
+---@field getElement fun(self: OpxMenu, value: any): OpxMenuElement|nil
+---@field getSelected fun(self: OpxMenu): OpxMenuElement|nil
+---@field setSelected fun(self: OpxMenu, target: integer|any): boolean Index, else element value; false for a separator / not found. Fires onHover, no sound.
+---@field setTitle fun(self: OpxMenu, title: string, subtitle?: string)
+---@field refresh fun(self: OpxMenu) Redraw after editing element tables directly.
+---@field isOpen fun(self: OpxMenu): boolean
+---@field close fun(self: OpxMenu) Closes it (and its children); the parent shows again.
+
+---@class OpxDialogField
+---@field name string|integer Key in the returned table (default: the field's position).
+---@field label? string
+---@field type? 'text' | 'input' | 'number' | 'date' | 'select' | 'checkbox' | 'color' | 'password' Default 'text' ('input' is the same type). Returns: text -> trimmed string, number -> number ("3,5" accepted), date -> 'YYYY-MM-DD' string, select -> the option's value (its label, or the option itself when it is a string/number). An empty optional field is absent.
+---@field default? any text/number/date: initial text; select: option value or index.
+---@field required? boolean Default true.
+---@field maxLength? integer text / number.
+---@field minLength? integer text.
+---@field min? number|string number: minimum; date: 'YYYY-MM-DD'.
+---@field max? number|string number: maximum; date: 'YYYY-MM-DD'.
+---@field options? (string|number|{label: string, value: any})[] select.
+---@field placeholder? string Hint line under the field.
+---@field description? string
+---@field icon? string|string[]
+---@field format? string Date display format; result stays ISO.
+
+---@class OpxDialogOptions
+---@field title? string
+---@field subtitle? string Meta line under the title, default 'Input'.
+---@field message? string Text above the fields.
+---@field fields OpxDialogField[]
+---@field submitLabel? string
+---@field cancelLabel? string
+---@field canCancel? boolean Default true.
+---@field style? OpxMenuStyle Accepted for compatibility; ignored.
+---@field validate? fun(values: table): boolean, string? false + message keeps the dialog open (message shown under the form). May yield (server check).
+
+---@class OpxConfirmOptions
+---@field title? string
+---@field subtitle? string
+---@field message? string
+---@field confirmLabel? string
+---@field cancelLabel? string
+---@field default? boolean true: Confirm is highlighted first (default: Cancel).
+---@field canCancel? boolean Default true.
+---@field style? OpxMenuStyle Accepted for compatibility; ignored.
+
+---@class OpxMenuLib
+---@field open fun(opts: OpxMenuOptions): OpxMenu|nil, OpxMenuOpenReason|nil
+---@field dialog fun(opts: OpxDialogOptions): table|nil, OpxDialogReason|nil Yields. nil + reason when not answered.
+---@field confirm fun(opts: OpxConfirmOptions): boolean, OpxDialogReason|nil Yields. false + reason unless the player picked the confirm answer ('cancelled' for Cancel / Backspace / Escape).
+---@field icons fun(): string[] Every icon name, sorted.
+---@field addIcon fun(name: string, d: string, viewBox?: string): boolean, string|nil Adds an icon for this resource ('invalid_name' | 'invalid_path' | 'invalid_view_box').
+---@field closeAll fun()
+---@field isOpen fun(): boolean This resource shows a menu or dialog.
+---@field isAnyOpen fun(): boolean Any resource shows one.
+---@field current fun(): OpxMenu|nil
+---@field setStyle fun(style: OpxMenuStyle|nil): boolean, string|nil Kept for compatibility (validates the name, changes nothing).
+---@field projection fun(side: 'left'|'right'|'center'): OpxProjection|nil The menu tilt of a side (Config.tilt), for a matching document of your own.
+
+---@class OpxProjection
+---@field origin number[] { x, y } fractions of the screen
+---@field rotateX number degrees
+---@field rotateY number degrees
+---@field perspective number dp
+
+-- Client exports of the opx_menu service (Open77.exports.callSync('opx_menu', name, ...)):
+-- IsAnyOpen() -> boolean, GetOwner() -> resource|nil, CloseAll() -> true (forces the owner to close),
+-- Claim() / Release() / SetInput(wanted) / GetBundle() / PlaySound(kind) are used by the library.
+-- The library registers opx_menu_release(force) and opx_menu_input(action) in the caller resource:
+-- action is 'up' | 'down' | 'left' | 'right' | 'select' | 'back' | 'pause'.
+--
+-- Behaviour a caller must know:
+-- * Callbacks (onSelect/onChange/onHover/onClose) run in their own thread on the next scheduler pass, so they may
+--   yield (Menu.dialog, Menu.confirm, Wait). An error is printed ('[opx_menu] callback error') and the menu keeps working.
+-- * Menu.open without `parent` replaces this resource's open menus (reason 'replaced'); a new child under a menu
+--   that has one replaces that child. menu:close() closes its children too and the parent shows again.
+-- * canClose = false: the player cannot close it and other resources' Menu.open answer 'menu_busy' while it is
+--   on screen; your code (menu:close, Menu.closeAll) or the service CloseAll still closes it.
+-- * A disabled row can be selected (its description is shown) but Enter plays an error sound and fires nothing.
+-- * Pass labels in normal case: the selected row and the footer are upper-cased in Lua. Description: two lines max.
+-- * Menu.dialog / Menu.confirm wait: outside a thread they answer 'not_in_thread'. Menu.dialog needs
+--   `dependency "opx_dialog"` ('dialog_unavailable' otherwise) and never answers 'menu_busy'; 'dialog_failed' =
+--   opx_dialog raised an error. Another surface taking the keyboard cancels a form ('focus_lost'); with
+--   canCancel = false it takes the keyboard back instead. Menu.closeAll answers a pending dialog nil, 'closed'
+--   (a confirm false, 'closed').
+-- * Menu.addIcon icons exist only in the calling resource; an unknown icon name draws nothing.

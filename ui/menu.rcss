@@ -1,0 +1,165 @@
+/* opx_menu - "Roue de sélection": the selected row big and bright in the middle of a vertical wheel,
+   its neighbours smaller, dimmer and pushed toward the screen edge along an arc (lib/wheel.lua moves
+   them with ui:animate: top / left in dp, scale, opacity). No panel: text shadow, and a dark backing
+   behind the selected row only.
+   Tokens: Config.theme swaps each value below everywhere in this sheet before the document is built,
+   alpha variants included (#ff3b4733 follows accent). Write a token exactly like this wherever it is used.
+   @token accent  #ff3b47
+   @token holo    #4fe3ff
+   @token text    #e9fbff
+   @token textDim #86a9b5
+   @token alarm   #ffa8ae
+   @token shade   #05090b
+   Fonts: only Chakra Petch (regular, bold), Rajdhani (regular), Roboto Mono (regular, bold) and Lato
+   are loaded; another weight or style draws nothing. No glyph arrows: every arrow and key is a <path>.
+   No RCSS transitions: motion goes through ui:animate / projections so nui.reducedmotion applies.
+   Animated properties keep a resting value here (top, left, opacity) so they never stick mid-way. */
+
+body { width: 100%; height: 100%; font-family: Rajdhani; font-size: 18dp; color: #e9fbff; }
+/* readable over bright scenes without a panel: a soft dark halo plus a drop shadow on every text */
+#root {
+    width: 100%; height: 100%; pointer-events: none;
+    font-effect: glow(0dp 3dp 0dp 1dp #00000080), shadow(0dp 1dp #000000cc);
+}
+
+/* ---- the wheel ---- */
+
+#menu { display: none; position: absolute; top: 0dp; width: 470dp; height: 100%; }
+#menu.shown { display: block; }
+#menu.right { right: 64dp; }
+#menu.left { left: 120dp; }  /* rows bend toward the left edge: keep room for the arc */
+
+/* zero-height anchor on the vertical centre; everything inside has an explicit width */
+#wcenter { position: absolute; left: 0dp; top: 50%; width: 470dp; height: 0dp; }
+.wheel { position: absolute; left: 0dp; top: 0dp; width: 470dp; height: 0dp; opacity: 1; }
+.wheel.idle { display: none; }
+
+/* one row; `top` is its centre (margin-top: -half). Neighbours are this row scaled down. */
+.row {
+    position: absolute; left: 0dp; top: 0dp; width: 440dp; height: 36dp; margin-top: -18dp;
+    box-sizing: border-box; padding: 0dp 12dp 0dp 14dp; border-left: 4dp #ff3b4700;
+    display: flex; flex-direction: row; align-items: center;
+    transform-origin: left center; opacity: 1;
+    font-family: Rajdhani; font-size: 26dp; color: #e9fbff;
+}
+.row.idle { visibility: hidden; }
+.row.sel {
+    border-left-color: #ff3b47;
+    decorator: linear-gradient(90deg, #05090bb3, #05090b00);
+}
+.row.off { color: #86a9b599; }
+/* lib/wheel.lua cuts a long label with "…" before the right label and the value */
+.label { flex: 1 1 auto; white-space: nowrap; overflow: hidden; }
+.row.sel .label { font-family: Chakra Petch; font-weight: bold; font-size: 25dp; letter-spacing: 1dp; }
+
+/* optional icon before the label (lib/icons.lua): a dark halo stroke under the coloured one.
+   A row without an icon keeps the empty box when other rows have one, so labels line up. */
+.ic { position: relative; width: 18dp; height: 18dp; flex-shrink: 0; margin-right: 10dp; }
+.ic path {
+    position: absolute; left: 0dp; top: 0dp; width: 18dp; height: 18dp;
+    fill: transparent; stroke-linecap: round; stroke-linejoin: round;
+}
+.ic .ib { stroke: #05090b99; stroke-width: 4dp; }
+.ic .if { stroke: #4fe3ffcc; stroke-width: 1.6dp; }
+.row.sel .ic .if { stroke: #ff3b47; }
+.row.off .ic .if { stroke: #86a9b580; }
+
+/* section label: small mono caps behind a short line, never selected */
+.row.sep .label { flex: 0 0 auto; font-family: Roboto Mono; font-size: 15dp; letter-spacing: 3dp; color: #4fe3ffb3; }
+.sep-line { width: 18dp; height: 1dp; flex-shrink: 0; margin-right: 8dp; background-color: #4fe3ff66; }
+
+/* value widgets: on the selected row only, at its right end */
+.right {
+    flex-shrink: 0; margin-left: 12dp; white-space: nowrap;
+    font-family: Roboto Mono; font-size: 14dp; color: #e9fbffcc;
+}
+.val { display: flex; flex-direction: row; align-items: center; flex-shrink: 0; margin-left: 12dp; opacity: 1; }
+.chev { width: 8dp; height: 12dp; flex-shrink: 0; fill: #ff3b47; }
+.row.off .chev { fill: #86a9b54d; }
+/* list / slider value: centred between the chevrons with a gap on both sides; lib/wheel.lua cuts it
+   with "…" to its box (a list value's box grows from 96dp to 168dp, inline width) */
+.pval {
+    display: block; width: 96dp; flex-shrink: 0; margin: 0dp 6dp; text-align: center; white-space: nowrap; overflow: hidden;
+    font-family: Roboto Mono; font-size: 16dp; color: #e9fbff;
+}
+.row.off .pval { color: #86a9b599; }
+.slide { width: 96dp; flex-shrink: 0; margin: 0dp 6dp; }
+.slide .pval { margin: 0dp; }
+.track { height: 2dp; margin: 2dp 8dp 0dp 8dp; background-color: #86a9b540; }
+.fill { height: 2dp; background-color: #ff3b47; }
+.row.off .fill { background-color: #86a9b5; }
+
+.sw { width: 11dp; height: 11dp; margin: 0dp 2dp; flex-shrink: 0; border: 1dp #e9fbff33; }
+.sw.on { width: 16dp; height: 16dp; border: 2dp #e9fbff; }
+.swn { margin-left: 8dp; font-family: Roboto Mono; font-size: 13dp; color: #86a9b5; }
+
+.check { width: 15dp; height: 15dp; flex-shrink: 0; border: 1dp #ff3b47; }
+.tick { display: none; width: 7dp; height: 7dp; margin: 4dp; background-color: #ff3b47; }
+.check.on .tick { display: block; }
+.row.off .check { border-color: #86a9b5; }
+
+/* description of the selected row, right under it: two lines at most, wrapped and cut with "…" by
+   lib/wheel.lua (Wheel.describe), which also makes room for it */
+#wdesc { position: absolute; left: 18dp; top: 21dp; width: 400dp; max-height: 44dp; overflow: hidden; opacity: 1; }
+#wdesc.empty { display: none; }
+.desc { display: block; font-size: 17dp; line-height: 21dp; color: #86a9b5; white-space: nowrap; overflow: hidden; }
+
+/* footer line + key hints, following the last row (top animated) */
+#wfoot { position: absolute; left: 18dp; top: 0dp; width: 440dp; }
+.crumb {
+    display: block; font-family: Roboto Mono; font-size: 12dp; letter-spacing: 2dp;
+    color: #4fe3ffcc; white-space: nowrap; overflow: hidden; opacity: 1;
+}
+
+/* key hints: drawn key caps */
+.keys { display: flex; flex-direction: row; align-items: center; margin-top: 8dp; }
+.kg { display: flex; flex-direction: row; align-items: center; flex-shrink: 0; margin-right: 12dp; }
+.kc {
+    display: flex; flex-direction: row; align-items: center; flex-shrink: 0;
+    height: 16dp; padding: 0dp 3dp; border: 1dp #86a9b580; border-radius: 2dp;
+    background-color: #05090b80; /* the cap stays readable over a bright sky */
+}
+.ki { width: 9dp; height: 9dp; flex-shrink: 0; margin: 0dp 1dp; fill: #4fe3ff; stroke: #4fe3ff; stroke-width: 1dp; }
+/* the cross of the backspace cap is drawn over the key shape (same box, pulled back) */
+.ki.x { margin-left: -11dp; fill: #05090b; stroke: #05090b; stroke-width: 1.2dp; }
+.kt { font-family: Roboto Mono; font-size: 10dp; color: #4fe3ff; }
+.kl { margin-left: 5dp; font-family: Roboto Mono; font-size: 11dp; color: #86a9b5; white-space: nowrap; }
+
+/* ---- dialog and confirm ---- */
+
+#dialog-wrap {
+    display: none; position: absolute; left: 0dp; top: 0dp; width: 100%; height: 100%;
+    box-sizing: border-box; flex-direction: row; align-items: center;
+}
+#dialog-wrap.shown { display: flex; }
+/* alone on screen it is centred over a soft shade (no panel, still readable) */
+#dialog-wrap.center { justify-content: center; decorator: radial-gradient(#05090b99, #05090b00); }
+#dialog-wrap.right { justify-content: flex-end; padding-right: 64dp; }
+#dialog-wrap.left { justify-content: flex-start; padding-left: 120dp; }
+
+#dialog { width: 420dp; flex: 0 0 auto; opacity: 1; }
+
+#dialog .title {
+    display: block; padding-left: 18dp; margin-bottom: 6dp;
+    font-family: Chakra Petch; font-weight: bold; font-size: 28dp; letter-spacing: 2dp;
+    white-space: nowrap; overflow: hidden;
+}
+.dlg-msg { display: block; margin-bottom: 12dp; padding-left: 18dp; font-size: 17dp; color: #86a9b5; }
+#dialog .crumb { margin-top: 12dp; padding-left: 18dp; }
+#dialog .keys { padding-left: 18dp; }
+.gone { display: none; }
+
+/* confirm answers: the highlighted one is a selected wheel row, the other smaller and set in */
+.opt {
+    position: relative; left: 0dp; height: 36dp; margin-bottom: 2dp;
+    box-sizing: border-box; padding-left: 14dp; border-left: 4dp #ff3b4700;
+    display: flex; flex-direction: row; align-items: center;
+    transform-origin: left center; opacity: 1;
+}
+.opt.sel { border-left-color: #ff3b47; decorator: linear-gradient(90deg, #05090bb3, #05090b00); }
+.opt .cap { display: none; white-space: nowrap; font-family: Chakra Petch; font-weight: bold; font-size: 24dp; letter-spacing: 1dp; }
+.opt .low { display: block; white-space: nowrap; font-size: 24dp; color: #e9fbff; }
+.opt.sel .cap { display: block; }
+.opt.sel .low { display: none; }
+
+#dlg-status { display: block; margin-top: 8dp; padding-left: 18dp; font-size: 15dp; color: #ffa8ae; }

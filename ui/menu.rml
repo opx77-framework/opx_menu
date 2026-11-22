@@ -1,0 +1,103 @@
+<rml>
+<head>
+    <title>opx_menu</title>
+    <link type="text/rcss" href="nui://open77/open77.rcss"/>
+    <!-- The service replaces this link with the themed sheet inline (see client/main.lua). -->
+    <link type="text/rcss" href="menu.rcss"/>
+</head>
+<body data-model="opxmenu">
+<div id="root">
+
+    <!-- Menu: the selection wheel. Rows are written once into #wa / #wb by lib/wheel.lua and moved
+         with ui:animate; the description, the footer line and the key hints are bound here. -->
+    <div id="menu" data-class-shown="menuShown" data-class-left="pos == 'left'" data-class-right="pos != 'left'">
+        <div id="wcenter">
+            <div class="wheel" id="wa"></div>
+            <div class="wheel" id="wb"></div>
+
+            <!-- desc1 / desc2: the description wrapped and cut by lib/wheel.lua (Wheel.describe), quotes included -->
+            <div id="wdesc" data-class-empty="desc == ''"><span class="desc">{{desc1}}</span><span class="desc" data-if="desc2 != ''">{{desc2}}</span></div>
+
+            <div id="wfoot">
+                <span class="crumb">{{crumb}}</span>
+                <div class="keys">
+                    <div class="kg">
+                        <div class="kc">
+                            <path class="ki" view-box="0 0 10 10" d="M5 1 L9 5.5 L6.2 5.5 L6.2 9 L3.8 9 L3.8 5.5 L1 5.5 Z"/>
+                            <path class="ki" view-box="0 0 10 10" d="M5 9 L9 4.5 L6.2 4.5 L6.2 1 L3.8 1 L3.8 4.5 L1 4.5 Z"/>
+                        </div>
+                        <span class="kl">{{hTurn}}</span>
+                    </div>
+                    <div class="kg" data-if="hasValue">
+                        <div class="kc">
+                            <path class="ki" view-box="0 0 10 10" d="M1 5 L5.5 1 L5.5 3.8 L9 3.8 L9 6.2 L5.5 6.2 L5.5 9 Z"/>
+                            <path class="ki" view-box="0 0 10 10" d="M9 5 L4.5 1 L4.5 3.8 L1 3.8 L1 6.2 L4.5 6.2 L4.5 9 Z"/>
+                        </div>
+                        <span class="kl">{{hChange}}</span>
+                    </div>
+                    <div class="kg">
+                        <div class="kc">
+                            <path class="ki" view-box="0 0 10 10" d="M7.6 1 L9 1 L9 6.6 L3.8 6.6 L3.8 8.8 L0.8 5.9 L3.8 3 L3.8 5.2 L7.6 5.2 Z"/>
+                        </div>
+                        <span class="kl">{{hSelect}}</span>
+                    </div>
+                    <div class="kg" data-if="hBack != ''">
+                        <div class="kc">
+                            <path class="ki" view-box="0 0 10 10" d="M3.6 1.5 L9.4 1.5 L9.4 8.5 L3.6 8.5 L0.6 5 Z"/>
+                            <path class="ki x" view-box="0 0 10 10" d="M5 3.6 L7.8 6.4 M7.8 3.6 L5 6.4"/>
+                        </div>
+                        <span class="kl">{{hBack}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard confirmation; input forms live in opx_dialog. -->
+    <div id="dialog-wrap" data-class-shown="dlgShown" data-class-center="dlgPos == 'center'"
+         data-class-left="dlgPos == 'left'" data-class-right="dlgPos == 'right'">
+        <div id="dialog">
+            <span class="title">{{dlgTitle}}</span>
+            <span class="dlg-msg" data-if="dlgMsg != ''">{{dlgMsg}}</span>
+            <!-- Kept in the tree (classes, not data-if): lib/dialog.lua animates them right away. -->
+            <div id="dlg-opts" data-class-gone="!dlgConfirm">
+                <div class="opt" id="dlg-opt0" data-class-sel="dlgHot == 0">
+                    <span class="cap">{{dlgSubmitCap}}</span><span class="low">{{dlgSubmit}}</span>
+                </div>
+                <div class="opt" id="dlg-opt1" data-class-sel="dlgHot == 1" data-class-gone="!dlgCanCancel">
+                    <span class="cap">{{dlgCancelCap}}</span><span class="low">{{dlgCancel}}</span>
+                </div>
+            </div>
+            <span id="dlg-status" data-if="dlgStatus != ''">{{dlgStatus}}</span>
+
+            <span class="crumb">· {{dlgMeta}} ·</span>
+            <div class="keys" data-if="dlgConfirm">
+                <div class="kg">
+                    <div class="kc">
+                        <path class="ki" view-box="0 0 10 10" d="M5 1 L9 5.5 L6.2 5.5 L6.2 9 L3.8 9 L3.8 5.5 L1 5.5 Z"/>
+                        <path class="ki" view-box="0 0 10 10" d="M5 9 L9 4.5 L6.2 4.5 L6.2 1 L3.8 1 L3.8 4.5 L1 4.5 Z"/>
+                    </div>
+                    <span class="kl">{{hChoose}}</span>
+                </div>
+                <div class="kg">
+                    <div class="kc">
+                        <path class="ki" view-box="0 0 10 10" d="M7.6 1 L9 1 L9 6.6 L3.8 6.6 L3.8 8.8 L0.8 5.9 L3.8 3 L3.8 5.2 L7.6 5.2 Z"/>
+                    </div>
+                    <span class="kl">{{hSelect}}</span>
+                </div>
+                <div class="kg" data-if="dlgCanCancel">
+                    <div class="kc">
+                        <path class="ki" view-box="0 0 10 10" d="M3.6 1.5 L9.4 1.5 L9.4 8.5 L3.6 8.5 L0.6 5 Z"/>
+                        <path class="ki x" view-box="0 0 10 10" d="M5 3.6 L7.8 6.4 M7.8 3.6 L5 6.4"/>
+                    </div>
+                    <span class="kl">{{dlgCancel}}</span>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+</div>
+</body>
+</rml>

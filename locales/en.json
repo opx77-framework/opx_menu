@@ -1,0 +1,20 @@
+{
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "confirm_eyebrow": "Confirmation",
+    "hint_turn": "turn",
+    "hint_choose": "choose",
+    "hint_change": "change",
+    "hint_select": "select",
+    "hint_toggle": "toggle",
+    "hint_back": "back",
+    "hint_close": "close",
+    "key_up": "Menu: up",
+    "key_down": "Menu: down",
+    "key_left": "Menu: previous value",
+    "key_right": "Menu: next value",
+    "key_select": "Menu: select",
+    "key_back": "Menu: back / close"
+}

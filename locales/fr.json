@@ -1,0 +1,20 @@
+{
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "close": "Fermer",
+    "confirm_eyebrow": "Confirmation",
+    "hint_turn": "tourner",
+    "hint_choose": "choisir",
+    "hint_change": "changer",
+    "hint_select": "valider",
+    "hint_toggle": "cocher",
+    "hint_back": "retour",
+    "hint_close": "fermer",
+    "key_up": "Menu : haut",
+    "key_down": "Menu : bas",
+    "key_left": "Menu : valeur précédente",
+    "key_right": "Menu : valeur suivante",
+    "key_select": "Menu : valider",
+    "key_back": "Menu : retour / fermer"
+}
